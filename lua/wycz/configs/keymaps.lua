@@ -5,8 +5,37 @@
 do
   -- [[ Basic Keymaps ]]
   --  See `:help vim.keymap.set()`
-  vim.keymap.set('i', '<C-s>', '<Esc><cmd>write<CR>', { silent = true })
-  vim.keymap.set('n', '<C-s>', '<cmd>write<CR>', { silent = true })
+  vim.keymap.set({ 'i', 'n' }, '<C-s>', '<Esc><cmd>write<CR>', { silent = true })
+
+  vim.keymap.set('n', '<leader>tt', function()
+    local term_buf = nil
+
+    -- Busca un buffer terminal existente (por tipo de buffer)
+    for _, b in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.bo[b].buftype == 'terminal' then
+        term_buf = b
+        break
+      end
+    end
+
+    -- Si existe, alterna entre mostrarlo o cerrarlo
+    if term_buf then
+      local term_win = vim.fn.bufwinid(term_buf)
+      if term_win ~= -1 then
+        -- Está visible: cierra la ventana donde está
+        vim.api.nvim_win_close(term_win, true)
+      else
+        -- Existe pero no está visible: ábrelo en una ventana
+        vim.cmd 'split'
+        vim.cmd('buffer ' .. term_buf)
+        vim.cmd 'startinsert'
+      end
+    else
+      -- No existe terminal: crea una
+      vim.cmd 'split | term'
+      vim.cmd 'startinsert'
+    end
+  end, { desc = 'Open/Close Terminal (toggle)' })
 
   local netrw_back = nil
 
